@@ -1,0 +1,6 @@
+*
+*/out/
+intro-to-modern-opengl
+!.gitignore
+!*/
+!lab01/*
