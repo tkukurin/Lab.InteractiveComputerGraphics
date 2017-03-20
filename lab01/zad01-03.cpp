@@ -22,7 +22,7 @@ glm::mat3 get_triangle_data() {
         cin >> data[i];
     }
 
-    return glm::transpose(glm::make_mat3(data));
+    return glm::make_mat3(data);
 }
 
 glm::vec3 get_point_data() {

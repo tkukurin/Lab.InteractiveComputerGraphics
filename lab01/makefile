@@ -1,3 +1,3 @@
 
 %:
-	g++ "$@.cpp" -o "$@" -Lglm -Iglm -lglut -lGL -lGLU -lm -g
+	g++ "$@.cpp" -o "./out/$@" -Lglm -Iglm -lglut -lGL -lGLU -lm -g
