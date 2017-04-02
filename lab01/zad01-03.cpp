@@ -42,6 +42,7 @@ int main(void) {
     glm::vec3 point = get_point_data();
     glm::vec3 solution = solve(triangle, point);
 
+		cout << glm::to_string(triangle) << endl;
     cout << glm::to_string(solution) << endl;
     return 0;
 }
