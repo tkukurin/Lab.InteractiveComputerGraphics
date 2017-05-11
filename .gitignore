@@ -3,4 +3,4 @@
 intro-to-modern-opengl
 !.gitignore
 !*/
-!lab01/*
+!lab0*/*
