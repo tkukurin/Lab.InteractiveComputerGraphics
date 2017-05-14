@@ -18,18 +18,6 @@ typedef struct {
 	double x, y;
 } Point;
 
-struct {
-	Point minP;
-	Point maxP;
-} limits;
-
-void updateLimits(Point p) {
-	limits.maxP.x = max(p.x, limits.maxP.x);
-	limits.maxP.y = max(p.y, limits.maxP.y);
-	limits.minP.x = min(p.x, limits.minP.x);
-	limits.minP.y = min(p.y, limits.minP.y);
-}
-
 bool isCommentOrGroup(char lineType) 
 {
 	return lineType == COMMENT_LINE_TYPE || lineType == 'g';
@@ -40,6 +28,16 @@ glm::vec3 readVec3(ifstream &f)
 	double x, y, z;
 	f >> x >> y >> z;
 	return glm::vec3(x, y, z);
+}
+
+vector<glm::vec3> readPolygonFile(ifstream &polyFile)
+{
+	vector<glm::vec3> poly;
+	int n; polyFile >> n;
+	while (n--) {
+		poly.push_back(readVec3(polyFile));
+	}
+	return poly;
 }
 
 vector<glm::vec3> readVertices(ifstream &f)
@@ -68,8 +66,6 @@ vector<glm::vec3> readVertices(ifstream &f)
 		f >> x >> y >> z;
 
 		data.push_back(glm::vec3(x, y, z));
-		updateLimits({ .x = x, .y = y });
-
 		cached = f.tellg();
 	}
 	

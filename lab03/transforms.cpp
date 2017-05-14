@@ -29,6 +29,11 @@ glm::mat4 getTransformMatrix(glm::vec3 eye, glm::vec3 view)
 										 0, 0, 0, 1);
 
 	T2 = glm::transpose(T2);
+	
+	if (!view.x && !view.y) {
+		T2 = glm::mat4();
+	}
+
 	view = apply(T2, view);
 
 	double sBeta = sqrt(view.x*view.x + view.z*view.z);
@@ -38,6 +43,11 @@ glm::mat4 getTransformMatrix(glm::vec3 eye, glm::vec3 view)
 										 0, 1, 0, 0,
 										 -sinBeta, 0, cosBeta, 0,
 									   0, 0, 0, 1);
+
+	if (!view.x && !view.z) {
+		T3 = glm::mat4();
+	}
+
 	T3 = glm::transpose(T3);
 	
 	glm::mat4 T4(0, -1, 0, 0,

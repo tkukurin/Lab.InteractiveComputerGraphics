@@ -8,24 +8,19 @@
 #include <vector>
 #include <sstream>
 #include <fstream>
+
 #include "parsing.cpp"
 #include "transforms.cpp"
+#include "common_gl_methods.cpp"
 
 using namespace std;
-
+vector<glm::vec3> vertexData;
 vector<glm::mat3> shapeData;
 vector<glm::vec3> controlPolygon;
 vector<glm::vec3> bezierPoints;
 
 glm::vec3 g_eye;
 glm::vec3 g_view;
-
-GLuint sub_width = 256, 
-			 sub_height = 256;
-
-void print(glm::mat4 m) {
-	cout << glm::to_string(m) << endl;
-}
 
 vector<glm::vec3> bezier(vector<glm::vec3> controlPolygon, int divs)
 {
@@ -57,24 +52,6 @@ vector<glm::vec3> bezier(vector<glm::vec3> controlPolygon, int divs)
 	return points;
 }
 
-
-void updateOnReshape(int w, int h) 
-{
-	sub_width = w;
-	sub_height = h;
-
-	glViewport(0, 0, sub_width, sub_height);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluOrtho2D(-w/200.0, w/200.0, -h/200.0, h/200.0);
-}
-
-
-void glVertex4v(glm::vec4 v)
-{
-	glVertex3f(v.x / v.w, v.y / v.w, 0);
-}
-
 bool isVisible(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3)
 {
 		glm::vec3 n = glm::cross(v3 - v1, v2 - v1);
@@ -93,10 +70,8 @@ void draw() {
 	glPointSize(1.0);
 	glColor3f(1.0f, 0.0f, 0.0f);
 
-	glm::mat4 m = getTransformMatrix(g_eye, g_view);
 	double H = glm::distance(g_eye, g_view);
-	glm::mat4 perspective = getPerspectiveMatrix(H);
-	m = m * perspective;
+	glm::mat4 transformMatrix = getTransformMatrix(g_eye, g_view) * getPerspectiveMatrix(H);
 
 	for (int i = 0; i < shapeData.size(); i++) {
 		glBegin(GL_LINE_LOOP);
@@ -106,9 +81,9 @@ void draw() {
 			continue;
 		}
 
-		glm::vec4 v1 = apply(m, curr[0]);
-		glm::vec4 v2 = apply(m, curr[1]);
-		glm::vec4 v3 = apply(m, curr[2]);
+		glm::vec4 v1 = apply(transformMatrix, curr[0]);
+		glm::vec4 v2 = apply(transformMatrix, curr[1]);
+		glm::vec4 v3 = apply(transformMatrix, curr[2]);
 
 		glVertex4v(v1);
 		glVertex4v(v2);
@@ -117,65 +92,53 @@ void draw() {
 	}
 	
 	glColor3f(0.0f, 1.0f, 1.0f);
+	glPointSize(5.0f);
   glBegin(GL_POINTS);
   for (auto p : controlPolygon) {
-    glm::vec4 point = apply(m, p);
-    glVertex3f(point.x, point.y, point.z);
+    glm::vec4 point = apply(transformMatrix, p);
+		glVertex4v(point);
   }
   glEnd();
 
   glColor3f(1.0f, 0.0f, 1.0f);
+	glLineWidth(2.0f);
+
   glBegin(GL_LINE_STRIP);
-	glLineWidth(4);
   for (auto p : bezierPoints) {
-    glm::vec4 point = apply(m, p);
-    glVertex3f(point.x, point.y, point.z);
+    glm::vec4 point = apply(transformMatrix, p);
+		glVertex4v(point);
   }
-	glLineWidth(1);
+
   glEnd();
+	glLineWidth(1.0f);
 
 	glutSwapBuffers();
 }
 
 int currentViewPosition = 0;
+
+void advanceFrame(int amount)
+{
+	currentViewPosition += amount;
+	
+	if (currentViewPosition >= bezierPoints.size())
+		currentViewPosition = 1;
+
+	g_view = bezierPoints[currentViewPosition];
+	draw();
+}
+
 void moveView(unsigned char key, int x, int y)
 {
 	if (currentViewPosition) {
-		currentViewPosition += 10;
-		
-		if (currentViewPosition < bezierPoints.size())
-			g_view = bezierPoints[currentViewPosition];
-		else
-			currentViewPosition = 1;
-
-		draw();
+		advanceFrame(10);
 		return;
 	}
 
-	controlPolygon = vector<glm::vec3>();
-
-	glm::mat4 m = getTransformMatrix(g_eye, g_view);
-	double H = glm::distance(g_eye, g_view);
-	glm::mat4 perspective = getPerspectiveMatrix(H);
-	m = m * perspective;
-
-	for (auto curr :shapeData) {
-		if (!isVisible(curr[0], curr[1], curr[2])) {
-			continue;
-		}
-
-		glm::vec4 v1 = apply(m, curr[0]);
-		glm::vec4 v2 = apply(m, curr[1]);
-		glm::vec4 v3 = apply(m, curr[2]);
-		
-		controlPolygon.push_back(v1);
-		controlPolygon.push_back(v2);
-		controlPolygon.push_back(v3);
-	}
-
+	controlPolygon = vector<glm::vec3>(vertexData);
 	bezierPoints = bezier(controlPolygon, 100);
-	currentViewPosition++;
-	draw();
+
+	advanceFrame(1);
 }
 
 int main(int argc, char ** argv) 
@@ -185,26 +148,20 @@ int main(int argc, char ** argv)
 		return -1;
 	}
 
-	limits.minP.x = limits.minP.y = 10000;
-	limits.maxP.x = limits.maxP.y = -10000;
+	if (argc == 4) {
+		ifstream polyFile(argv[3], ios::out);
+		controlPolygon = readPolygonFile(polyFile);
+		bezierPoints = bezier(controlPolygon, 100);
+		polyFile.close();
+	}
 
 	ifstream eyeViewFile(argv[2], ios::out);
 	g_view = readVec3(eyeViewFile);
 	g_eye = readVec3(eyeViewFile);
 	eyeViewFile.close();
 
-	if (argc == 4) {
-		ifstream polyFile(argv[3], ios::out);
-		int n; polyFile >> n;
-		while (n--) {
-			controlPolygon.push_back(readVec3(polyFile));
-		}
-		bezierPoints = bezier(controlPolygon, 100);
-		polyFile.close();
-	}
-
 	ifstream objFile(argv[1], ios::out);
-	vector<glm::vec3> vertexData = readVertices(objFile);
+	vertexData = readVertices(objFile);
 	shapeData = readFaces(objFile, vertexData);
 	objFile.close();
 
@@ -215,6 +172,8 @@ int main(int argc, char ** argv)
 	glutReshapeFunc(updateOnReshape);
 	glutDisplayFunc(draw);
 	glutKeyboardFunc(moveView);
+
+	glutSwapBuffers();
 	glutMainLoop();
 
 	return 0;
