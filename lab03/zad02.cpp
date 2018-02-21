@@ -16,7 +16,7 @@
 using namespace std;
 vector<glm::vec3> vertexData;
 vector<glm::mat3> shapeData;
-vector<glm::vec3> controlPolygon;
+vector<glm::vec3> g_controlPolygon;
 vector<glm::vec3> bezierPoints;
 
 glm::vec3 g_eye;
@@ -52,11 +52,11 @@ vector<glm::vec3> bezier(vector<glm::vec3> controlPolygon, int divs)
 	return points;
 }
 
-bool isVisible(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3)
+bool isVisible(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 eye)
 {
 		glm::vec3 n = glm::cross(v3 - v1, v2 - v1);
     glm::vec3 c = (v1 + v2 + v3) * (1.0f/3.0f);
-    glm::vec3 np = g_eye - c;
+    glm::vec3 np = eye - c;
 
     return glm::dot(n, np) >= 0;
 }
@@ -77,13 +77,13 @@ void draw() {
 		glBegin(GL_LINE_LOOP);
 		glm::mat3 curr = shapeData[i];
 
-		if (!isVisible(curr[0], curr[1], curr[2])) {
-			continue;
-		}
-
 		glm::vec4 v1 = apply(transformMatrix, curr[0]);
 		glm::vec4 v2 = apply(transformMatrix, curr[1]);
 		glm::vec4 v3 = apply(transformMatrix, curr[2]);
+
+		if (!isVisible(v1, v2, v3, g_eye)) {
+			continue;
+		}
 
 		glVertex4v(v1);
 		glVertex4v(v2);
@@ -94,7 +94,7 @@ void draw() {
 	glColor3f(0.0f, 1.0f, 1.0f);
 	glPointSize(5.0f);
   glBegin(GL_POINTS);
-  for (auto p : controlPolygon) {
+  for (auto p : g_controlPolygon) {
     glm::vec4 point = apply(transformMatrix, p);
 		glVertex4v(point);
   }
@@ -135,8 +135,8 @@ void moveView(unsigned char key, int x, int y)
 		return;
 	}
 
-	controlPolygon = vector<glm::vec3>(vertexData);
-	bezierPoints = bezier(controlPolygon, 100);
+	g_controlPolygon = vector<glm::vec3>(vertexData);
+	bezierPoints = bezier(g_controlPolygon, 100);
 
 	advanceFrame(1);
 }
@@ -150,8 +150,8 @@ int main(int argc, char ** argv)
 
 	if (argc == 4) {
 		ifstream polyFile(argv[3], ios::out);
-		controlPolygon = readPolygonFile(polyFile);
-		bezierPoints = bezier(controlPolygon, 100);
+		g_controlPolygon = readPolygonFile(polyFile);
+		bezierPoints = bezier(g_controlPolygon, 100);
 		polyFile.close();
 	}
 

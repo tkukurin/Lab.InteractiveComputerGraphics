@@ -1,0 +1,18 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+COMMENT_LINE_TYPE	zad02.cpp	/^const char COMMENT_LINE_TYPE = '#';$/;"	v
+draw	zad02.cpp	/^void draw() {$/;"	f
+getPlaneEquations	zad02.cpp	/^vector<glm::vec4> getPlaneEquations(vector<glm::mat3> &shapeData)$/;"	f
+isWithinLoadedObject	zad02.cpp	/^bool isWithinLoadedObject(glm::vec3 point, vector<glm::vec4> planeEquations)$/;"	f
+main	zad02.cpp	/^int main(int argc, char ** argv) $/;"	f
+readShaders	zad02.cpp	/^vector<glm::vec3> readShaders(ifstream &f)$/;"	f
+readShapes	zad02.cpp	/^vector<glm::mat3> readShapes(ifstream &f, vector<glm::vec3> &shaderData) $/;"	f
+shapeData	zad02.cpp	/^vector<glm::mat3> shapeData;$/;"	v
+sub_height	zad02.cpp	/^			 sub_height = 256;$/;"	v
+sub_width	zad02.cpp	/^GLuint sub_width = 256, $/;"	v
+updateOnReshape	zad02.cpp	/^void updateOnReshape(int w, int h) $/;"	f
+window	zad02.cpp	/^GLuint window; $/;"	v
